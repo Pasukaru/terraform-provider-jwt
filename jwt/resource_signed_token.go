@@ -15,6 +15,10 @@ func resourceSignedToken() *schema.Resource {
 		Delete: deleteSignedJWT,
 		Read:   readSignedJWT,
 
+		Description: `
+Provides a way to sign a JSON Web Token using a public/private key pair using RSA or ECDSA. More information about JWT [here](https://jwt.io/introduction/).
+`,
+
 		Schema: map[string]*schema.Schema{
 			"algorithm": &schema.Schema{
 				Type:         schema.TypeString,

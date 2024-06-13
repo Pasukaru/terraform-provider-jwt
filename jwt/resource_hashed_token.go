@@ -14,6 +14,10 @@ func resourceHashedToken() *schema.Resource {
 		Delete: deleteHashedJWT,
 		Read:   readHashedJWT,
 
+		Description: `
+Provides a way to sign a JSON Web Token using a secret (with the HMAC algorithm). More information about JWT [here](https://jwt.io/introduction/).
+`,
+
 		Schema: map[string]*schema.Schema{
 			"algorithm": &schema.Schema{
 				Type:         schema.TypeString,
