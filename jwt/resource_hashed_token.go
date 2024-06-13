@@ -1,9 +1,9 @@
 package jwt
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-
 	jwtgen "github.com/dgrijalva/jwt-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,10 +23,10 @@ func resourceHashedToken() *schema.Resource {
 				ValidateFunc: validateHashingAlgorithm,
 				ForceNew:     true,
 			},
-			"secret": &schema.Schema{
+			"secret_base64": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "HMAC secret to sign the JWT with.",
+				Description: "HMAC secret as base64 string to sign the JWT with.",
 				ForceNew:    true,
 				Sensitive:   true,
 			},
@@ -53,19 +53,29 @@ func createHashedJWT(d *schema.ResourceData, meta interface{}) (err error) {
 	claims := d.Get("claims_json").(string)
 
 	jsonClaims := make(map[string]interface{})
-	json.Unmarshal([]byte(claims), &jsonClaims)
+	err = json.Unmarshal([]byte(claims), &jsonClaims)
+	if err != nil {
+		return err
+	}
 
 	token := jwtgen.NewWithClaims(signer, jwtgen.MapClaims(jsonClaims))
 
-	secret := d.Get("secret").(string)
+	secretBase64 := d.Get("secret_base64").(string)
+	secret, err := base64.StdEncoding.DecodeString(secretBase64)
+	if err != nil {
+		return err
+	}
 
-	hashedToken, err := token.SignedString([]byte(secret))
+	hashedToken, err := token.SignedString(secret)
 	if err != nil {
 		return err
 	}
 	compactClaims, _ := json.Marshal(token.Claims)
 	d.SetId(string(compactClaims))
-	d.Set("token", hashedToken)
+	err = d.Set("token", hashedToken)
+	if err != nil {
+		return err
+	}
 	return
 }
 

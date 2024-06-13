@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 
@@ -13,20 +14,17 @@ func TestHashedJWT(t *testing.T) {
 		Providers: testProviders,
 		Steps: []r.TestStep{
 			r.TestStep{
-				Config: `
+				Config: fmt.Sprintf(`
                     resource "jwt_hashed_token" "example" {
 						algorithm = "HS512"
-						secret    = "notthegreatestkey"
-
-						claims = {
-							a = "b"
-						}
+						secret_base64 = "%s"
+						claims_json = "{\"a\":\"b\"}"
 					}
 
 					output "example_token" {
-						value = "${jwt_hashed_token.example.token}"
+						value = nonsensitive(jwt_hashed_token.example.token)
 					}
-                `,
+                `, base64.StdEncoding.EncodeToString([]byte("notthegreatestkey"))),
 				Check: func(s *terraform.State) error {
 					gotTokenUntyped := s.RootModule().Outputs["example_token"].Value
 					gotToken, ok := gotTokenUntyped.(string)

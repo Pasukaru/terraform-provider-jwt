@@ -54,7 +54,10 @@ func createSignedJWT(d *schema.ResourceData, meta interface{}) (err error) {
 	claims := d.Get("claims_json").(string)
 
 	jsonClaims := make(map[string]interface{})
-	json.Unmarshal([]byte(claims), &jsonClaims)
+	err = json.Unmarshal([]byte(claims), &jsonClaims)
+	if err != nil {
+		return err
+	}
 
 	token := jwtgen.NewWithClaims(signer, jwtgen.MapClaims(jsonClaims))
 
@@ -78,7 +81,10 @@ func createSignedJWT(d *schema.ResourceData, meta interface{}) (err error) {
 	}
 	compactClaims, _ := json.Marshal(token.Claims)
 	d.SetId(string(compactClaims))
-	d.Set("token", signedToken)
+	err = d.Set("token", signedToken)
+	if err != nil {
+		return err
+	}
 	return
 }
 
